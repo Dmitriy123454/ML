@@ -1,0 +1,7 @@
+numpy>=1.21
+opencv-python>=4.5
+matplotlib>=3.5
+scikit-learn>=1.0
+scikit-image>=0.18
+tensorflow>=2.8
+keras>=2.8

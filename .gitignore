@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.cache/
+*.ipynb_checkpoints/
+__pycache__/
+*.log
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# IDE-specific (PyCharm, VSCode, etc.)
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+
+# Temporary files
+*.tmp
+*.swp
+
+# Data files (optional: оставить только необходимые)
+data/processed/features.npy
+data/processed/clusters/labels.npy
+
+# Tensorflow/Keras saved models
+*.h5
+*.keras
+saved_model/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Output folders
+logs/
+outputs/
+runs/
+
+# Pytest cache
+.pytest_cache/
+
+# Pylint/mypy artifacts
+.mypy_cache/
+.pylint.d/
