@@ -18,3 +18,66 @@ python scripts/run_auto_segmentation.py
 
  Jupyter Notebook
  jupyter notebook
+
+
+код для  jupyter notebook
+ import numpy as np
+import cv2
+import os
+from skimage.measure import label as skimage_label, regionprops
+from skimage.color import label2rgb
+import matplotlib.pyplot as plt
+
+def segment_by_cluster_label_and_connectivity(labels_1d, w, h, min_size=200):
+    seg_mask = np.zeros((h, w), dtype=int)
+    labels_2d = labels_1d.reshape(h, w)
+    seg_id = 1
+    for cluster_id in np.unique(labels_2d):
+        if cluster_id == -1:
+            continue
+        mask = (labels_2d == cluster_id)
+        labeled = skimage_label(mask, connectivity=1)
+        for region in regionprops(labeled):
+            if region.area >= min_size:
+                for coords in region.coords:
+                    seg_mask[coords[0], coords[1]] = seg_id
+                seg_id += 1
+    return seg_mask
+
+methods = ['kmeans', 'gmm', 'hdbscan', 'minibatch_kmeans', 'hierarchical', 'spectral']
+
+w, h = 640, 480
+frame_dir = 'data/processed'
+frame_files = sorted([f for f in os.listdir(frame_dir) if f.lower().endswith('.jpg')])
+frame_indices = [0, 1, 2, 3, 4, 5]
+for method in methods:
+    labels_path = f'data/processed/clusters/labels_pixels_{method}.npy'
+    if not os.path.exists(labels_path):
+        print(f'Нет файла: {labels_path}, пропускаю метод {method}')
+        continue
+    labels = np.load(labels_path)
+    pixels_per_frame = w * h
+    print(f'\nМетод: {method}')
+    plt.figure(figsize=(12, 12))
+    for i, frame_idx in enumerate(frame_indices):
+        if frame_idx >= len(frame_files):
+            print(f'Нет кадра с индексом {frame_idx}, пропускаю.')
+            continue
+        frame_labels = labels[frame_idx*pixels_per_frame : (frame_idx+1)*pixels_per_frame]
+        frame = cv2.imread(os.path.join(frame_dir, frame_files[frame_idx]))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        seg_mask = segment_by_cluster_label_and_connectivity(frame_labels, w, h, min_size=200)
+        if frame.shape[:2] != seg_mask.shape:
+            frame = cv2.resize(frame, (seg_mask.shape[1], seg_mask.shape[0]))
+        image = label2rgb(seg_mask, image=frame, bg_label=0, alpha=0.3)
+        plt.subplot(len(frame_indices), 2, i*2+1)
+        plt.imshow(frame)
+        plt.title(f"Кадр {frame_idx+1} — Оригинал")
+        plt.axis('off')
+        plt.subplot(len(frame_indices), 2, i*2+2)
+        plt.imshow(image)
+        plt.title(f"Кадр {frame_idx+1} — Сегментация")
+        plt.axis('off')
+    plt.suptitle(f'Метод: {method}', fontsize=18)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
