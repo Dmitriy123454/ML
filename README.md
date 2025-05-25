@@ -21,6 +21,7 @@ python scripts/run_auto_segmentation.py
 
 
 код для  jupyter notebook
+
  import numpy as np
 import cv2
 import os
