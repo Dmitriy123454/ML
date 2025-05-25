@@ -13,7 +13,7 @@ class TemporalDBSCAN(BaseTemporalCluster):
         self.model = DBSCAN(eps=self.eps, min_samples=self.min_samples)
         labels = self.model.fit_predict(X)
 
-        # ✅ отладка: покажем распределение меток
+
         unique, counts = np.unique(labels, return_counts=True)
         print(f"[DBSCAN] Распределение меток: {dict(zip(unique, counts))}")
 

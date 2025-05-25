@@ -6,26 +6,25 @@ from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 import matplotlib.pyplot as plt
 from skimage.segmentation import find_boundaries
 
-# Папка с кадрами
 input_dir = "data/processed"
-# Папка для результатов
+
 output_base_dir = "outputs/segmentation"
 methods = ["kmeans", "hierarchical", "dbscan"]
 
-# Параметры кластеризации
+
 n_clusters = 5
 eps_dbscan = 5
 min_samples_dbscan = 10
 
-# Вес признаков
+
 brightness_weight = 1.0
 coordinate_weight = 0.1
 
-# Размер полного кадра
+
 full_width = 1280
 full_height = 966
 
-# Размер для Hierarchical
+
 small_width = 320
 small_height = 241
 
@@ -56,30 +55,27 @@ def cluster_pixels(features, method):
     return labels
 
 def get_contrast_color(idx):
-    """Контрастные цвета"""
     contrast_colors = [
-        (255, 0, 0),      # Красный
-        (0, 0, 0),        # Чёрный
-        (255, 0, 255),    # Пурпурный
-        (255, 255, 0),    # Жёлтый
-        (255, 165, 0),    # Оранжевый
+        (255, 0, 0),
+        (0, 0, 0),
+        (255, 0, 255),
+        (255, 255, 0),
+        (255, 165, 0),
     ]
     return contrast_colors[idx % len(contrast_colors)]
 
 def visualize_colored_boundaries(original_image, labels, shape):
-    """Рисование тонких цветных границ между кластерами"""
     segmented = labels.reshape(shape)
     unique_labels = np.unique(labels)
     overlay = original_image.copy()
 
     for idx, label in enumerate(unique_labels):
         if label == -1:
-            continue  # пропускать шум
+            continue
         mask = (segmented == label)
         boundary = find_boundaries(mask, mode='thick')
         color = get_contrast_color(idx)
 
-        # Наносим тонкую границу
         coords = np.argwhere(boundary)
         for y, x in coords:
             if 0 <= y < overlay.shape[0] and 0 <= x < overlay.shape[1]:
@@ -94,13 +90,13 @@ def process_all_frames():
         output_dir = os.path.join(output_base_dir, method)
         os.makedirs(output_dir, exist_ok=True)
 
-        print(f"\n🚀 Кластеризация методом {method}")
+        print(f"\n Кластеризация методом {method}")
 
         for frame_file in frame_files:
             frame_path = os.path.join(input_dir, frame_file)
             frame = cv2.imread(frame_path)
             if frame is None:
-                print(f"⚠️ Проблема с загрузкой файла: {frame_path}")
+                print(f" Проблема с загрузкой файла: {frame_path}")
                 continue
 
             h, w = frame.shape[:2]
@@ -111,7 +107,7 @@ def process_all_frames():
 
             if method == "hierarchical":
                 frame_to_process = cv2.resize(frame_resized, (small_width, small_height))
-                print(f"⚡ Hierarchical: уменьшили до {small_width}x{small_height}")
+                print(f" Hierarchical: уменьшили до {small_width}x{small_height}")
             else:
                 frame_to_process = frame_resized
 
@@ -124,10 +120,10 @@ def process_all_frames():
 
             output_path = os.path.join(output_dir, f"segmented_{frame_file}")
             cv2.imwrite(output_path, overlay)
-            print(f"✅ Сохранено: {output_path}")
+            print(f"Сохранено: {output_path}")
 
 if __name__ == "__main__":
-    print("🗑 Очистка старых результатов...")
-    clear_output_dir()
+   # print("Очистка старых результатов...")
+   #  clear_output_dir()
     process_all_frames()
-    print("\n🎯 Обработка завершена!")
+    print("\nОбработка завершена!")

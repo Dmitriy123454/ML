@@ -11,10 +11,11 @@ class TemporalSpectral(BaseTemporalCluster):
         model = SpectralClustering(
             n_clusters=self.n_clusters,
             affinity='nearest_neighbors',
-            n_neighbors=30,
+            n_neighbors=50,
             assign_labels='kmeans',
             random_state=42
         )
         return model.fit_predict(X)
+
 
 

@@ -29,8 +29,11 @@ ENV/
 *.swp
 
 # Data files (optional: оставить только необходимые)
-data/processed/features.npy
-data/processed/clusters/labels.npy
+data/processed/clusters/labels_pixels*.npy
+data/processed/clusters/timestamps_pixels*.npy
+data/processed/clusters/labels_frames.npy
+data/processed/clusters/timestamps_frames.npy
+data/processed/clusters/*.npy
 
 # Tensorflow/Keras saved models
 *.h5

@@ -15,27 +15,30 @@ from src.clustering.minibatch_kmeans import TemporalMiniBatchKMeans
 from src.clustering.gmm import TemporalGMM
 from src.clustering.spectral import TemporalSpectral
 
-
-# Папки
 input_dir = "data/processed"
 output_base_dir = "outputs/segmentation"
+cluster_save_dir = "data/processed/clusters"
+os.makedirs(cluster_save_dir, exist_ok=True)
 
-# Размер кадра
 full_width = 640
 full_height = 480
 
-# Параметры
 n_clusters = 5
 min_cluster_size_hdbscan = 500
 
-# Веса признаков
 brightness_weight = 1.0
 coordinate_weight = 0.05
 time_weight = 0.2
 
-# Методы
-available_methods = ["spectral"]
-#""hierarchical", "kmeans", "minibatch_kmeans", "gmm","hdbscan",
+available_methods = [
+    "kmeans",
+    "minibatch_kmeans",
+    "gmm",
+    "hdbscan",
+    #"hierarchical",
+    #"spectral"
+]
+
 def clear_output_dirs():
     if os.path.exists(output_base_dir):
         shutil.rmtree(output_base_dir)
@@ -89,29 +92,32 @@ def cluster_pixels(X_vis, X_time, all_features, method, frame=None):
     elif method == "spectral":
         return TemporalSpectral(n_clusters=n_clusters).cluster(X_vis, X_time)
     else:
-        raise ValueError(f"❌ Неизвестный метод: {method}")
+        raise ValueError(f"Неизвестный метод: {method}")
 
 def process_frames(methods=None):
     frame_files = sorted([f for f in os.listdir(input_dir) if f.lower().endswith(('.jpg', '.png'))])
     if not frame_files:
-        print("❗ Нет кадров для обработки.")
+        print("Нет кадров для обработки.")
         return
 
     methods = methods or available_methods
     total_start = time.time()
 
     for method in methods:
-        print(f"\n🚀 Кластеризация методом: {method}")
+        print(f"\nКластеризация методом: {method}")
         method_start = time.time()
         method_dir = os.path.join(output_base_dir, method)
         os.makedirs(method_dir, exist_ok=True)
+
+        method_labels = []
+        method_timestamps = []
 
         for frame_file in frame_files:
             frame_start = time.time()
             frame_path = os.path.join(input_dir, frame_file)
             frame = cv2.imread(frame_path)
             if frame is None:
-                print(f"⚠️ Пропуск: {frame_file}")
+                print(f"Пропуск: {frame_file}")
                 continue
 
             resized = cv2.resize(frame, (full_width, full_height))
@@ -125,26 +131,34 @@ def process_frames(methods=None):
             labels = cluster_pixels(X_vis, X_time, all_features, method, frame=resized)
 
             uniq, counts = np.unique(labels, return_counts=True)
-            print(f"  ↳ [{frame_file}] метки: {dict(zip(uniq, counts))}")
+            print(f" [{frame_file}] метки: {dict(zip(uniq, counts))}")
 
             if np.all(labels == -1):
-                print(f"  ⚠️ Метод {method} не нашёл ни одного кластера — все пиксели = шум")
+                print(f" Метод {method} не нашёл ни одного кластера — все пиксели = шум")
 
             vis = visualize_boundaries(resized, labels, gray.shape)
             out_path = os.path.join(method_dir, f"segmented_{frame_file}")
             cv2.imwrite(out_path, vis)
 
+            method_labels.extend(labels.tolist())
+            method_timestamps.extend([t_norm] * len(labels))
+
             frame_time = round(time.time() - frame_start, 2)
-            print(f"  ⏱ Время кадра: {frame_time} сек")
+            print(f" Время кадра: {frame_time} сек")
+
+        # Сохраняем метки отдельно для каждого метода
+        np.save(os.path.join(cluster_save_dir, f"labels_pixels_{method}.npy"), np.array(method_labels))
+        np.save(os.path.join(cluster_save_dir, f"timestamps_pixels_{method}.npy"), np.array(method_timestamps))
+        print(f"Метки и времена для метода {method} сохранены!")
 
         method_time = round(time.time() - method_start, 2)
-        print(f"✅ Метод {method} завершён за {method_time} сек")
+        print(f"Метод {method} завершён за {method_time} сек")
 
     total_time = round(time.time() - total_start, 2)
-    print(f"\n🏁 Все методы завершены за {total_time} сек")
+    print(f"\n Все методы завершены за {total_time} сек")
 
 if __name__ == "__main__":
-    print("🧹 Очистка результатов...")
-    #clear_output_dirs()
+    # print(" Очистка результатов...")
+    # clear_output_dirs()   Раскомментируйте, если нужно почистить
     process_frames()
-    print("\n✅ Готово!")
+    print("\n Готово!")

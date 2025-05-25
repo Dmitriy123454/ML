@@ -6,7 +6,7 @@ class TemporalHierarchical(BaseTemporalCluster):
         super().__init__(**kwargs)
         self.n_clusters = n_clusters
         self.linkage = linkage
-        self.affinity = affinity  # 👈 обязательно добавляем
+        self.affinity = affinity
 
     def cluster(self, X_vis, X_time):
         X = self._combine_features(X_vis, X_time)
